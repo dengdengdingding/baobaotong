@@ -123,7 +123,8 @@ function previewChosenPhoto(){
  const file=$('photoFile').files?.[0];clearChosenPreview();if(!file)return;
  const area=$('pendingPhotoPreview');area.classList.remove('hidden');
  // FileReader works in older Android/WeChat WebViews that may not display blob: object URLs reliably.
- area.innerHTML='<b>📷 已选择照片，正在生成预览……</b><div class="mini" id="localPhotoName"></div><img id="localPhotoThumb" alt="上传前图片预览" style="display:none"><button class="btn soft" type="button" id="localPhotoZoom" disabled>🔍 放大查看</button>';
+ area.innerHTML='<b>📷 已选择照片，正在生成预览……</b><div class="mini" id="localPhotoName"></div><img id="localPhotoThumb" alt="上传前图片预览" style="display:none"><div class="buttonbar"><button class="btn soft" type="button" id="localPhotoZoom" disabled>🔍 放大查看</button><button class="btn ghost" type="button" id="localPhotoRemove">🗑️ 取消选择</button></div>';
+ $('localPhotoRemove').onclick=()=>{$('photoFile').value='';clearChosenPreview();toast('已取消选择，照片不会上传 ♡')};
  $('localPhotoName').textContent=file.name+' · '+(file.size/1024/1024).toFixed(2)+' MB';
  const mimeOk=file.type.startsWith('image/'), extOk=/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif)$/i.test(file.name);
  if(!mimeOk&&!extOk){area.querySelector('b').textContent='⚠️ 选中的文件不是图片';return}
