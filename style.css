@@ -141,3 +141,7 @@ input[readonly]{background:#fff3f7;color:#a35679;font-weight:800;border-style:da
 .tomorrow-time input{width:84px;min-width:70px;padding:10px 6px}
 #newTomorrowMinutes{width:112px;flex:0 1 112px;min-width:90px}
 @media(max-width:420px){.tomorrow-row>input[data-tomorrow-name]{flex-basis:150px}.tomorrow-time input{width:74px}#newTomorrowMinutes{width:96px;flex-basis:96px}}
+
+.nav-icon{display:inline-grid;place-items:center;width:34px;height:34px;margin:0 auto 3px;border-radius:10px;font-size:18px;line-height:1;background:#f7edf1;border:1px solid #f0dfe7;color:#c56f93;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.nav-icon.blossom{font-size:16px;color:#e56ea8;background:linear-gradient(180deg,#f7f1f4,#efe7eb)}
+.bottom-nav button.active .nav-icon{background:linear-gradient(180deg,#fff7fa,#f7dfe9);border-color:#ebc8d7;color:#cf5e93;box-shadow:0 4px 10px rgba(207,94,147,.12)}
