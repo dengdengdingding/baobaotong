@@ -112,14 +112,35 @@ $('logout').onclick=()=>{if(!confirm('退出云端账号？本机记录仍会保
 window.addEventListener('online',()=>{if(session&&!conflict)void sync()});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&session&&!conflict){clearTimeout(netTimer);netTimer=setTimeout(sync,1500)}});
 // Storage uses a PRIVATE bucket; no secret keys in client. Uploads require a working authenticated session.
 // Keep a temporary local preview independent of cloud connectivity.
-let chosenPhotoObjectUrl=null, lightboxObjectUrl=null;
+let chosenPhotoDataUrl=null, lightboxObjectUrl=null, photoReadSerial=0;
 function closePhotoLightbox(){ $('photoLightbox').classList.add('hidden');$('lightboxImage').removeAttribute('src');if(lightboxObjectUrl){URL.revokeObjectURL(lightboxObjectUrl);lightboxObjectUrl=null} }
 function openPhotoLightbox(src,caption,ownedUrl=false){closePhotoLightbox();lightboxObjectUrl=ownedUrl?src:null;$('lightboxImage').src=src;$('lightboxCaption').textContent=caption||'照片预览';$('photoLightbox').classList.remove('hidden')}
 $('closePhotoLightbox').onclick=closePhotoLightbox;
 $('photoLightbox').addEventListener('click',e=>{if(e.target===$('photoLightbox'))closePhotoLightbox()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('photoLightbox').classList.contains('hidden'))closePhotoLightbox()});
-function clearChosenPreview(){if(chosenPhotoObjectUrl){URL.revokeObjectURL(chosenPhotoObjectUrl);chosenPhotoObjectUrl=null}$('pendingPhotoPreview').classList.add('hidden');$('pendingPhotoPreview').innerHTML=''}
-$('photoFile').addEventListener('change',()=>{clearChosenPreview();const f=$('photoFile').files?.[0];if(!f)return;if(!f.type.startsWith('image/')){$('photoHelp').textContent='请选择图片文件';return}chosenPhotoObjectUrl=URL.createObjectURL(f);const area=$('pendingPhotoPreview');area.classList.remove('hidden');area.innerHTML='<b>📷 上传前确认图片</b><img id="localPhotoThumb" alt="待上传照片预览"><div class="mini" id="localPhotoName"></div><button class="btn soft" type="button" id="localPhotoZoom">🔍 点击放大预览</button>';$('localPhotoThumb').src=chosenPhotoObjectUrl;$('localPhotoName').textContent=f.name+' · '+(f.size/1024/1024).toFixed(2)+' MB';$('localPhotoZoom').onclick=()=>openPhotoLightbox(chosenPhotoObjectUrl,f.name);});
+function clearChosenPreview(){photoReadSerial++;chosenPhotoDataUrl=null;const area=$('pendingPhotoPreview');area.classList.add('hidden');area.innerHTML=''}
+function previewChosenPhoto(){
+ const file=$('photoFile').files?.[0];clearChosenPreview();if(!file)return;
+ const area=$('pendingPhotoPreview');area.classList.remove('hidden');
+ // FileReader works in older Android/WeChat WebViews that may not display blob: object URLs reliably.
+ area.innerHTML='<b>📷 已选择照片，正在生成预览……</b><div class="mini" id="localPhotoName"></div><img id="localPhotoThumb" alt="上传前图片预览" style="display:none"><button class="btn soft" type="button" id="localPhotoZoom" disabled>🔍 放大查看</button>';
+ $('localPhotoName').textContent=file.name+' · '+(file.size/1024/1024).toFixed(2)+' MB';
+ const mimeOk=file.type.startsWith('image/'), extOk=/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif)$/i.test(file.name);
+ if(!mimeOk&&!extOk){area.querySelector('b').textContent='⚠️ 选中的文件不是图片';return}
+ const serial=photoReadSerial,reader=new FileReader();
+ reader.onload=()=>{
+  if(serial!==photoReadSerial)return;
+  chosenPhotoDataUrl=String(reader.result||'');const img=$('localPhotoThumb');
+  img.onload=()=>{if(serial===photoReadSerial){area.querySelector('b').textContent='✅ 已选择照片，上传前可查看';img.style.display='block';$('localPhotoZoom').disabled=false}};
+  img.onerror=()=>{if(serial===photoReadSerial){area.querySelector('b').textContent='照片已选择，但当前浏览器无法显示缩略图（请尝试 JPG/PNG）'}};
+  img.src=chosenPhotoDataUrl;
+  $('localPhotoZoom').onclick=()=>{if(chosenPhotoDataUrl)openPhotoLightbox(chosenPhotoDataUrl,file.name)};
+ };
+ reader.onerror=()=>{if(serial===photoReadSerial)area.querySelector('b').textContent='照片读取失败，请重新选择或使用系统浏览器'};
+ try{reader.readAsDataURL(file)}catch(e){area.querySelector('b').textContent='无法读取此图片：'+e.message}
+}
+$('photoFile').addEventListener('change',previewChosenPhoto);
+$('photoFile').addEventListener('input',()=>{if($('photoFile').files?.length&&!chosenPhotoDataUrl)previewChosenPhoto()});
 const bucket='growth-proofs';
 function photoUrl(path){return cloud.url.replace(/\/$/,'')+'/storage/v1/object/authenticated/'+bucket+'/'+path.split('/').map(encodeURIComponent).join('/')}
 async function imageBlob(file){if(!file.type.startsWith('image/'))throw Error('请选择图片');const object=URL.createObjectURL(file);try{const im=new Image();im.src=object;await im.decode();let ratio=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*ratio));c.height=Math.max(1,Math.round(im.naturalHeight*ratio));c.getContext('2d').drawImage(im,0,0,c.width,c.height);return await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('图片压缩失败')),'image/jpeg',0.75))}finally{URL.revokeObjectURL(object)}}
