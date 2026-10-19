@@ -133,3 +133,11 @@ input[type=file]::file-selector-button{background:#f8e6ee;color:#945c74;border:0
 
 /* V4.6 study planner */
 input[readonly]{background:#fff3f7;color:#a35679;font-weight:800;border-style:dashed;opacity:1}.sixlevel-row{display:flex;align-items:center;gap:12px;background:#fff4f7;padding:16px;border:1px solid #f0dce4;border-radius:16px;line-height:1.6}.sixlevel-row input{width:22px;height:22px;flex:0 0 22px;accent-color:#cc7796}.sixlevel-row b{font-size:11px;color:#be7895}.tomorrow-row{display:flex;align-items:center;gap:8px}.tomorrow-row input{flex:1;min-width:0}.taskrow input[data-daily-minutes]{max-width:150px;margin-top:6px}.form-grid input[readonly]:focus{box-shadow:none}
+
+/* V4.7: planned study duration and balanced tomorrow goal form */
+.tomorrow-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tomorrow-row>input[data-tomorrow-name]{flex:1 1 180px;min-width:135px}
+.tomorrow-time{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px}
+.tomorrow-time input{width:84px;min-width:70px;padding:10px 6px}
+#newTomorrowMinutes{width:112px;flex:0 1 112px;min-width:90px}
+@media(max-width:420px){.tomorrow-row>input[data-tomorrow-name]{flex-basis:150px}.tomorrow-time input{width:74px}#newTomorrowMinutes{width:96px;flex-basis:96px}}
